@@ -38,7 +38,6 @@ class MongoQueue(object):
         # Add some indexs to speed up for query
         self.collection.ensure_index([('priority', pymongo.DESCENDING)])
         self.collection.ensure_index([('locked_by', pymongo.ASCENDING), ('locked_at', pymongo.ASCENDING), ('attempts', pymongo.ASCENDING)])
-        self.collection.ensure_index([('_id', pymongo.ASCENDING), ('locked_by', pymongo.ASCENDING)])
         self.consumer_id = consumer_id
         self.timeout = timeout
         self.max_attempts = max_attempts
@@ -179,14 +178,14 @@ class Job(object):
         """Job has been completed.
         """
         return self._queue.collection.find_and_modify(
-            {"_id": self.job_id, "locked_by": self._queue.consumer_id},
+            {"_id": self.job_id},
             remove=True)
 
     def error(self, message=None):
         """Note an error processing a job, and return it to the queue.
         """
         self._queue.collection.find_and_modify(
-            {"_id": self.job_id, "locked_by": self._queue.consumer_id},
+            {"_id": self.job_id},
             update={"$set": {
                 "locked_by": None, "locked_at": None, "last_error": message},
                 "$inc": {"attempts": 1}})
@@ -195,14 +194,14 @@ class Job(object):
         """Note progress on a long running task.
         """
         return self._queue.collection.find_and_modify(
-            {"_id": self.job_id, "locked_by": self._queue.consumer_id},
+            {"_id": self.job_id},
             update={"$set": {"progress": count, "locked_at": datetime.now()}})
 
     def release(self):
         """Put the job back into_queue.
         """
         return self._queue.collection.find_and_modify(
-            {"_id": self.job_id, "locked_by": self._queue.consumer_id},
+            {"_id": self.job_id},
             update={"$set": {"locked_by": None, "locked_at": None},
                     "$inc": {"attempts": 1}})
 

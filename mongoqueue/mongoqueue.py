@@ -50,7 +50,7 @@ class MongoQueue(object):
     def clear(self):
         """Clear the queue.
         """
-        return self.collection.drop()
+        return self.collection.remove({})
 
     def size(self):
         """Total size of the queue

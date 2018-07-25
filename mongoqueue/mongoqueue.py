@@ -35,6 +35,10 @@ class MongoQueue(object):
         """
         """
         self.collection = collection
+        # Add some indexs to speed up for query
+        self.collection.ensure_index([('priority', pymongo.DESCENDING)])
+        self.collection.ensure_index([('locked_by', pymongo.ASCENDING), ('locked_at', pymongo.ASCENDING), ('attempts', pymongo.ASCENDING)])
+        self.collection.ensure_index([('_id', pymongo.ASCENDING), ('locked_by', pymongo.ASCENDING)])
         self.consumer_id = consumer_id
         self.timeout = timeout
         self.max_attempts = max_attempts
